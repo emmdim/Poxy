@@ -1,6 +1,13 @@
 from pox.core import core
 from pox.lib.util import dpid_to_str
- 
+
+
+"""
+Simple POX API example how to handle connections
+
+"""
+
+
 log = core.getLogger()
   
 class MyComponent (object):
