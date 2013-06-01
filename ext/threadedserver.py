@@ -1,6 +1,6 @@
 import threading
 import SocketServer
-
+from events import *
 
 from pox.core import core
 from pox.lib.revent import *
@@ -16,41 +16,44 @@ This is the main server component. It implements a UDPServer which
 
 
 log = core.getLogger()
+### SERVER
 
-class MessageArrived (Event):
-    def __init__ (self, msg=None) :
-        Event.__init__(self)
-        log.debug("Inside Event")
-        self.msg = msg
 
+# OVERRIDES
 
 class ThreadedEchoRequestHandler(SocketServer.BaseRequestHandler):
 
+    data = None
+
     def handle(self):
         # Echo the back to the client
-        data = self.request[0].strip()
+        self.data = self.request[0].strip()
         socket = self.request[1]
         #TCP data = self.request.recv(1024)
         cur_thread = threading.current_thread()
-        response = '%s: %s' % (cur_thread, data)
+        response = '%s: %s' % (cur_thread, self.data)
         socket.sendto(response, self.client_address)
         # TCP self.request.send(response)
-        return
 
+
+# EventMixin is also made a supercalls to be bale to raise the event
 class ThreadedEchoServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer,
         EventMixin):
     
+    # Declaring the event
     _eventMixin_events = set([
               MessageArrived,
     ])
     
+    # Overriding the finish_request function of SocketServer.BaseServer
     def finish_request(self, request, client_address):
         """Finish one request by instantiating RequestHandlerClass."""
-        self.raiseEvent(MessageArrived, "Message")
-        self.RequestHandlerClass(request, client_address, self)
+        obj = self.RequestHandlerClass(request, client_address, self)
+        # Raise the event
+        self.raiseEvent(MessageArrived, obj.data)
 
 
-
+# ACTUAL CLASS
 
 class MyServer :
     
@@ -72,6 +75,10 @@ class MyServer :
     def stop (self) :
         self.server.socket.close()
         self.t.stop()
+
+
+
+### CLIENT
 
 
 class MyClient :

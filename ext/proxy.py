@@ -21,17 +21,17 @@ class Proxy (object) :
     def __init__(self) :
         log.debug("After register")
         myserver = threadedserver.MyServer()
-        log.debug("Server started")
+        log.info("Server started")
         myserver.server.addListeners(self)
         while True:
             pass
     
     def _handle_MessageArrived (self, event):
-        log.debug("you have message")
+        log.debug('Incoming message message: '+event.msg)
 
 
 def launch ():
-    log.debug("Before register")
+    #log.debug("Before register")
     #p = Proxy()
     core.registerNew(Proxy)
     #core.register("myproxy", p)
