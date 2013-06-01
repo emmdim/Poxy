@@ -1,5 +1,6 @@
 import threading
 import SocketServer
+import socket
 from events import *
 
 from pox.core import core
@@ -24,15 +25,18 @@ log = core.getLogger()
 class ThreadedEchoRequestHandler(SocketServer.BaseRequestHandler):
 
     data = None
+    src = None
 
     def handle(self):
         # Echo the back to the client
         self.data = self.request[0].strip()
         socket = self.request[1]
+        self.src = self.client_address
+        log.debug(socket)
         #TCP data = self.request.recv(1024)
         cur_thread = threading.current_thread()
-        response = '%s: %s' % (cur_thread, self.data)
-        socket.sendto(response, self.client_address)
+        #response = '%s: %s' % (cur_thread, self.data)
+        #socket.sendto(response, self.client_address)
         # TCP self.request.send(response)
 
 
@@ -50,7 +54,7 @@ class ThreadedEchoServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer,
         """Finish one request by instantiating RequestHandlerClass."""
         obj = self.RequestHandlerClass(request, client_address, self)
         # Raise the event
-        self.raiseEvent(MessageArrived, obj.data)
+        self.raiseEvent(MessageArrived, obj.src,  obj.data)
 
 
 # ACTUAL CLASS
@@ -72,10 +76,13 @@ class MyServer :
         t.start()
         print 'Server loop running in process:', threading.current_thread()
 
-    def stop (self) :
-        self.server.socket.close()
+    def stop (self):
         self.t.stop()
 
+    def send (self,dst, msg) :
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.sendto(msg, dst)
+        s.close()
 
 
 ### CLIENT
@@ -84,16 +91,14 @@ class MyServer :
 class MyClient :
 
     def __init__ (self,ip= "127.0.0.1", port= 6640) :
-        import socket
         # Connect to the server
         #TCP s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect((ip, port))
 
         # Send the data
         message = 'Hello, world'
         print 'Sending : "%s"' % message
-        len_sent = s.send(message)
+        len_sent = s.sendto(message, (ip,port))
 
         # Receive a response
         response = s.recv(1024)
