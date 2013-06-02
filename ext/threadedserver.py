@@ -46,7 +46,7 @@ class ThreadedEchoServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer,
     
     # Declaring the event
     _eventMixin_events = set([
-              MessageArrived,
+              ProxyMessageArrived,
     ])
     
     # Overriding the finish_request function of SocketServer.BaseServer
@@ -54,7 +54,7 @@ class ThreadedEchoServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer,
         """Finish one request by instantiating RequestHandlerClass."""
         obj = self.RequestHandlerClass(request, client_address, self)
         # Raise the event
-        self.raiseEvent(MessageArrived, obj.src,  obj.data)
+        self.raiseEvent(ProxyMessageArrived, obj.src,  obj.data)
 
 
 # ACTUAL CLASS

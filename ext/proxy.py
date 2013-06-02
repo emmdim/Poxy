@@ -20,7 +20,7 @@ class Proxy (object) :
     
     myserver = None
     
-    def _handle_MessageArrived (self, event):
+    def _handle_ProxyMessageArrived (self, event):
         log.debug('Incoming message: '+event.msg)
         self.send(event.src,event.msg)
 
