@@ -19,10 +19,11 @@ class Proxy (object) :
     "A simple proxy"
     
     myserver = None
+    controller = None
     
     def _handle_ProxyMessageArrived (self, event):
         log.debug('Incoming message: '+event.msg)
-        self.send(event.src,event.msg)
+        self.send(self.controller,event.msg)
 
     def send(self, dst, msg):
         self.myserver.send(dst,msg)
@@ -43,7 +44,8 @@ class Proxy (object) :
         log.info("Hub running.")
 
 
-    def __init__(self) :
+    def __init__(self, controller=('127.0.0.1',6634)) :
+        self.controller = controller
         log.debug("After register")
         self.myserver = threadedserver.MyServer()
         log.info("Server started")
