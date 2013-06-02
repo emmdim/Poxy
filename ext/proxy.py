@@ -19,6 +19,28 @@ class Proxy (object) :
     "A simple proxy"
     
     myserver = None
+    
+    def _handle_MessageArrived (self, event):
+        log.debug('Incoming message: '+event.msg)
+        self.send(event.src,event.msg)
+
+    def send(self, dst, msg):
+        self.myserver.send(dst,msg)
+
+
+
+    def logic ():
+        import pox.openflow.libopenflow_01 as of
+        from pox.lib.util import dpidToStr
+
+        def _handle_ConnectionUp (event):
+            msg = of.ofp_flow_mod()
+            msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
+            event.connection.send(msg)
+            log.info("Hubifying %s", dpidToStr(event.dpid))
+
+        core.openflow.addListenerByName("ConnectionUp", _handle_ConnectionUp)
+        log.info("Hub running.")
 
 
     def __init__(self) :
@@ -26,13 +48,9 @@ class Proxy (object) :
         self.myserver = threadedserver.MyServer()
         log.info("Server started")
         self.myserver.server.addListeners(self)
-        while True:
-            pass
+   #     while True:
+   #         pass
     
-    def _handle_MessageArrived (self, event):
-        log.debug('Incoming message: '+event.msg)
-        self.myserver.send(event.src,event.msg)
-
 
 def launch ():
     core.registerNew(Proxy)
