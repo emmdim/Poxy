@@ -14,6 +14,7 @@ This is the main server component. It implements a UDPServer which
 
 """
 
+import pox.openflow.libopenflow_01 as of
 
 
 log = core.getLogger()
@@ -41,7 +42,7 @@ class ThreadedEchoRequestHandler(SocketServer.BaseRequestHandler):
 
 
 # EventMixin is also made a supercalls to be bale to raise the event
-class ThreadedEchoServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer,
+class ThreadedEchoServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer,
         EventMixin):
     
     # Declaring the event
@@ -75,6 +76,11 @@ class MyServer :
         t.setDaemon(True) # don't hang on exit
         t.start()
         print 'Server loop running in process:', threading.current_thread()
+        print self.server.socket
+        self.server.socket.connect(('127.0.0.1',6634))
+        msg = of.ofp_features_request().show()
+        print msg
+        self.server.socket.send(msg)
 
     def stop (self):
         self.t.stop()
