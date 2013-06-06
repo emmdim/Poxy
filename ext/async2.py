@@ -50,8 +50,11 @@ class Client(Task, EventMixin):
     self.buf = ''
     self.barrierxid = 0
     self.sock.connect(self.address)
-    core.addListener(pox.core.GoingUpEvent, self.start_event_loop)
+    # This is not needed since I start this client when I already
+    # receive feautres of switches :-P
+    #core.addListener(pox.core.GoingUpEvent, self.start_event_loop)
     log.debug('Proxy in Loop 1')
+    self.start_event_loop()
 
   def run (self):
     log.debug("Connected to remote controller")
@@ -113,7 +116,9 @@ class Client(Task, EventMixin):
         #self.buffer = self.buffer[sent:]
         #self.buffer = self.buffer[sent:]
   
-  def start_event_loop(self, event):
+  # Not a handler anymore
+  #def start_event_loop(self, event):
+  def start_event_loop(self):
       #t=threading.Thread(target=Task.start(self))
       #t.setDaemon(True) # don't hang on exit
       #t.start()

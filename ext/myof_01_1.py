@@ -195,8 +195,7 @@ def handle_FEATURES_REPLY (con, msg):
   if con.ofnexus.clear_flows_on_connect:
     con.send(of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE))
 
-  
-  myproxy.start(msg,con)
+  myproxy.start(con)
   con.send(barrier)
 
   """
@@ -238,11 +237,11 @@ def handle_ERROR_MSG (con, msg): #A
 def handle_BARRIER (con, msg):
   #test = myproxy.read()
   #while not isinstance(test,of.ofp_barrier_request) : test = myproxy.read()
-  newmsg = of.ofp_barrier_reply()
-  newmsg.xid = myproxy.conn.client.barrierxid
-  log.debug("Sending barriern with XID")
-  log.debug(newmsg.xid)
-  myproxy.send(newmsg.pack())
+  #newmsg = of.ofp_barrier_reply()
+  #newmsg.xid = myproxy.conn.client.barrierxid
+  #log.debug("Sending barriern with XID")
+  #log.debug(newmsg.xid)
+  #myproxy.send(newmsg.pack())
   
   e = con.ofnexus.raiseEventNoErrors(BarrierIn, con, msg)
   if e is None or e.halt != True:

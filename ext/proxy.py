@@ -37,21 +37,24 @@ class Proxy (object) :
         
         # Check if the message is a hello package and reply
         if isinstance(msg,of.ofp_hello) :
-            self.send(msg.pack())
+            log.debug('RECEIVED HELLO')
+           # self.send(msg.pack())
         
         # Check if the message is a features request 
         # and see if we got already the features from
         # the actual switch in order to reply
         if isinstance(msg,of.ofp_features_request) :
+            log.debug('RECEIVED FEATURES REQUEST')
             self.send((self.switch.features).pack())
 
         # Check if the message is a Barrier in and reply
-        if isinstance(msg, of.of_barrier_request) :
+        if isinstance(msg, of.ofp_barrier_request) :
+            log.debug('RECEIVED FEATURES REQUEST')
             newmsg = of.ofp_barrier_reply()
-            nemsg.xid = msg.xid
-            self.send(newmsg.pack)
+            newmsg.xid = msg.xid
+            self.send(newmsg.pack())
 
-        self.q.put(msg)
+        #self.q.put(msg)
         log.debug('Incoming message: '+msg.show())
         #self.send(event.msg)
 
@@ -70,18 +73,20 @@ class Proxy (object) :
         return msg
 
 
-   def start(self,switch):
-       self.conn = async2.Conn(rcontroller)
-       self.conn.client.addListeners(self)
-       self.switch = switch
+    def start(self,switch):
+        self.conn = async2.Conn(self.rcontroller)
+        self.conn.client.addListeners(self)
+        self.switch = switch
        #send starting hello
-       msg = of.ofp_hello()
-       self.conn.start(msg.pack())
+        msg = of.ofp_hello()
+        self.conn.start(msg.pack())
+        log.debug('SENT HELLO')
 
 
     def __init__(self,  rcontroller=('127.0.0.1',6634)) :
         #log.debug('After register message:'+msg)
         #print type(msg)
+        self.rcontroller = rcontroller
         self.q = Queue.Queue()
         self.conn = None
         self.switch = None
