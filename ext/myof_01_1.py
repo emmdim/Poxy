@@ -129,7 +129,6 @@ def handle_FEATURES_REPLY (con, msg):
   #  time.sleep(1)
   #  test = myproxy.read()
   #myproxy.send(msg.pack())
-  myproxy.start(msg)
   #test = myproxy.read()
   #while test == pox.openflow.libopenflow_01.of_ofp_hello:
   #  test = myproxy.read()
@@ -196,6 +195,8 @@ def handle_FEATURES_REPLY (con, msg):
   if con.ofnexus.clear_flows_on_connect:
     con.send(of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE))
 
+  
+  myproxy.start(msg,con)
   con.send(barrier)
 
   """

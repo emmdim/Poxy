@@ -43,7 +43,7 @@ class Proxy (object) :
         # and see if we got already the features from
         # the actual switch in order to reply
         if isinstance(msg,of.ofp_features_request) :
-            self.send((self.features).pack())
+            self.send((self.switch.features).pack())
 
         # Check if the message is a Barrier in and reply
         if isinstance(msg, of.of_barrier_request) :
@@ -70,10 +70,10 @@ class Proxy (object) :
         return msg
 
 
-   def start(self,features):
+   def start(self,switch):
        self.conn = async2.Conn(rcontroller)
        self.conn.client.addListeners(self)
-       self.features = features
+       self.switch = switch
        #send starting hello
        msg = of.ofp_hello()
        self.conn.start(msg.pack())
@@ -84,7 +84,7 @@ class Proxy (object) :
         #print type(msg)
         self.q = Queue.Queue()
         self.conn = None
-        self.features = None
+        self.switch = None
         #self.conn.start()
         log.info("Connection with remote Controller initiated")
         # Example to test send
