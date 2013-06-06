@@ -64,10 +64,11 @@ from errno import EAGAIN, ECONNRESET
 
 import traceback
 
+# Manos
 import proxy
 
 myproxy = proxy.Proxy()
-
+# End Manos
 
 def handle_HELLO (con, msg): #S
   #con.msg("HELLO wire protocol " + hex(msg.version))
@@ -195,7 +196,9 @@ def handle_FEATURES_REPLY (con, msg):
   if con.ofnexus.clear_flows_on_connect:
     con.send(of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE))
 
+  # Manos
   myproxy.start(con)
+  # End Manos
   con.send(barrier)
 
   """
@@ -216,6 +219,9 @@ def handle_PORT_STATUS (con, msg): #A
     con.ports._forget(msg.desc)
   else:
     con.ports._update(msg.desc)
+  # Manos
+  myproxy.switch = con
+  # End Manos
   e = con.ofnexus.raiseEventNoErrors(PortStatus, con, msg)
   if e is None or e.halt != True:
     con.raiseEventNoErrors(PortStatus, con, msg)
