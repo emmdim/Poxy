@@ -94,10 +94,10 @@ class Client(Task, EventMixin):
         offset = new_offset
         log.info('In handle_read')
         log.info(msg)
-        if isinstance(msg, pox.openflow.libopenflow_01.ofp_barrier_request):
-            log.debug('Is instance with XID')
-            log.debug(msg.xid)
-            self.barrierxid = msg.xid
+        #if isinstance(msg, pox.openflow.libopenflow_01.ofp_barrier_request):
+         #   log.debug('Is instance with XID')
+         #   log.debug(msg.xid)
+         #   self.barrierxid = msg.xid
         log.debug('Before Event')
         self.raiseEvent(ProxyMessageArrived,msg)
 

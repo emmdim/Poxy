@@ -33,8 +33,26 @@ class Proxy (object) :
 
     def _handle_ProxyMessageArrived (self, event):
         log.debug('In Handle')
-        self.q.put(event.msg)
-        log.debug('Incoming message: '+event.msg.show())
+        msg = event.msg
+        
+        # Check if the message is a hello package and reply
+        if isinstance(msg,of.ofp_hello) :
+            self.send(msg.pack())
+        
+        # Check if the message is a features request 
+        # and see if we got already the features from
+        # the actual switch in order to reply
+        if isinstance(msg,of.ofp_features_request) :
+            self.send((self.features).pack())
+
+        # Check if the message is a Barrier in and reply
+        if isinstance(msg, of.of_barrier_request) :
+            newmsg = of.ofp_barrier_reply()
+            nemsg.xid = msg.xid
+            self.send(newmsg.pack)
+
+        self.q.put(msg)
+        log.debug('Incoming message: '+msg.show())
         #self.send(event.msg)
 
 
@@ -52,16 +70,21 @@ class Proxy (object) :
         return msg
 
 
- #   def start(self,msg):
- #       self.conn.start(msg)
+   def start(self,features):
+       self.conn = async2.Conn(rcontroller)
+       self.conn.client.addListeners(self)
+       self.features = features
+       #send starting hello
+       msg = of.ofp_hello()
+       self.conn.start(msg.pack())
 
 
     def __init__(self,  rcontroller=('127.0.0.1',6634)) :
         #log.debug('After register message:'+msg)
         #print type(msg)
         self.q = Queue.Queue()
-        self.conn = async2.Conn(rcontroller)
-        self.conn.client.addListeners(self)
+        self.conn = None
+        self.features = None
         #self.conn.start()
         log.info("Connection with remote Controller initiated")
         # Example to test send

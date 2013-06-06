@@ -79,12 +79,12 @@ def handle_HELLO (con, msg): #S
     #assert isinstance(msg1,of.ofp_header)
   #msg = msg.pack()
 
-  msg1 = of.ofp_hello()
-  myproxy.send(msg1.pack())
-  log.debug('Before reading...')
+  #msg1 = of.ofp_hello()
+  #myproxy.send(msg1.pack())
+  #log.debug('Before reading...')
   #test = myproxy.read()
   #log.debug('I read this: ' + test.show())
-  log.debug('Back to life')
+  #log.debug('Back to life')
 
   
   #test = myproxy.read()
@@ -128,7 +128,8 @@ def handle_FEATURES_REPLY (con, msg):
   #while not isinstance(test,of.ofp_features_request) : 
   #  time.sleep(1)
   #  test = myproxy.read()
-  myproxy.send(msg.pack())
+  #myproxy.send(msg.pack())
+  myproxy.start(msg)
   #test = myproxy.read()
   #while test == pox.openflow.libopenflow_01.of_ofp_hello:
   #  test = myproxy.read()
