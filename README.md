@@ -1,4 +1,10 @@
-POX is a network controller written in Python.
+Poxy
+====
+
+A proxy for POX OpenFlow controller
+
+
+POX is an OpenFlow controller written in Python.
 
 Poxy is proxy service on top of POX that simulates gives that
 forwards the local switch connections also to a remote controller
