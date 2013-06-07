@@ -64,80 +64,13 @@ from errno import EAGAIN, ECONNRESET
 
 import traceback
 
+# Manos
 import proxy
 
-myproxy = None
-
-
-class MySock() :
-
-
-    def send (self,msg) :
-        self.mysock.sendall(msg)
-
-    def read (self) :
-
-        d = self.mysock.recv(2048)
-        if len(d) == 0:
-            return False
-        self.buf += d
-        buf_len = len(self.buf)
-        offset = 0
-        while buf_len - offset >= 8:
-            ofp_type = ord(self.buf[offset+1])
-            msg_length = ord(self.buf[offset+2]) << 8 | ord(self.buf[offset+3])
-            if buf_len - offset < msg_length: break
-            new_offset,msg = unpackers[ofp_type](self.buf, offset)
-            assert new_offset - offset == msg_length
-            offset = new_offset
-            #log.info(msg)
-            if isinstance(msg, pox.openflow.libopenflow_01.ofp_barrier_request):
-                #log.debug('Is instance with XID')
-                #log.debug(msg.xid)
-                self.barrierxid = msg.xid
-
-
-    def stop (self):
-        self.mysock,close()
-
-
-    def __init__ (self):
-        self.buf = ''
-        self.barrierxid = 0
-        for res in socket.getaddrinfo('127.0.0.1',6634, socket.AF_UNSPEC,socket.SOCK_STREAM):
-            af, socktype, proto, canonname, sa = res
-        self.mysock = socket.socket(af, socktype,proto)
-        self.mysock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.mysock.connect(sa)
-
-
-mysock = MySock()
+myproxy = proxy.Proxy()
+# End Manos
 
 def handle_HELLO (con, msg): #S
-  #con.msg("HELLO wire protocol " + hex(msg.version))
-  #con.msg("Msg " + msg.show())
-  #log.debug('Msg'+msg.show())
-  #msg1 = of.ofp_hello()
-  #if type(msg) is not bytes:
-    #only the assert without the pack works, dunno why
-    #assert isinstance(msg1,of.ofp_header)
-  #msg = msg.pack()
-
-  msg1 = of.ofp_hello()
-  mysock.send(msg1.pack())
-  test = mysock.read()
-  test = mysock.read()
-  #log.debug('RECEIVED FROM SERVER')
-  #log.debug(test)
-
-
-  #log.debug('Data  pack in handle_hello')
-  #log.debug(type(msg))
-  #log.debug(msg)
-  #log.debug('Msg1'+msg1)
-  #con.msg(msg1)
-  #myproxy = proxy.Proxy(bytearray(msg1.show()), ('127.0.0.1',6634))
-  #myproxy = proxy.Proxy(msg, ('127.0.0.1',6634))
   # Send a features request
   msg = of.ofp_features_request()
   con.send(msg)
@@ -160,10 +93,6 @@ def handle_FLOW_REMOVED (con, msg): #A
 def handle_FEATURES_REPLY (con, msg):
   connecting = con.connect_time == None
   
-  mysock.send(msg.pack())
-  test = mysock.read()
-  test = mysock.read()
-
   con.features = msg
   con.original_ports._ports = set(msg.ports)
   con.ports._reset()
@@ -225,6 +154,9 @@ def handle_FEATURES_REPLY (con, msg):
   if con.ofnexus.clear_flows_on_connect:
     con.send(of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE))
 
+  # Manos
+  myproxy.start((radress,rport),con)
+  # End Manos
   con.send(barrier)
 
   """
@@ -245,6 +177,9 @@ def handle_PORT_STATUS (con, msg): #A
     con.ports._forget(msg.desc)
   else:
     con.ports._update(msg.desc)
+  # Manos
+  myproxy.switch = con
+  # End Manos
   e = con.ofnexus.raiseEventNoErrors(PortStatus, con, msg)
   if e is None or e.halt != True:
     con.raiseEventNoErrors(PortStatus, con, msg)
@@ -264,10 +199,6 @@ def handle_ERROR_MSG (con, msg): #A
               msg.show(str(con) + " Error: ").strip())
 
 def handle_BARRIER (con, msg):
-  newmsg = of.ofp_barrier_reply()
-  newmsg.xid = mysock.barrierxid
-  mysock.send(newmsg.pack())
-  
   e = con.ofnexus.raiseEventNoErrors(BarrierIn, con, msg)
   if e is None or e.halt != True:
     con.raiseEventNoErrors(BarrierIn, con, msg)
@@ -1003,7 +934,9 @@ def _set_handlers ():
 _set_handlers()
 
 
-def launch (port = 6633, address = "0.0.0.0"):
+# Manos
+def launch (port = 6633, address = "0.0.0.0", rport = 6634, raddress = "0.0.0.0"):
+# End Manos
   if core.hasComponent('of_01'):
     return None
   l = OpenFlow_01_Task(port = int(port), address = address)

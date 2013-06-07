@@ -8,114 +8,114 @@ import Queue
 
 """
 This module lies in the middle of the asynchornous connection object of
-async.py and the higher level application
+async.py and the basic POX funciotnality. It gives the abstraction of a 
+Proxy between the switch and the remote controller.
 
-It gives the abstraction of a Proxy between the switch and the remote
-controller.
-
-#The main idea in this module would be to overwrite the _handle_PacketIn
-#function or only some specific message handlers (for example handlers of
-#HELLO). The basis for this can be the pox/openflow/of_01.py
-
+On the one hand it receives messages from the remote controller and 
+sends them to the switch (through the local controller connection).
+On the other hand, it receives messages (through the local controller
+connection) and forwards them to the remote controller.
 """
 
 # To create and send the test ofp packet
 import pox.openflow.libopenflow_01 as of
 
+# For debugging
 log = core.getLogger()
 
+""" 
+    Mesage Handlers
+    
+    The main logic of the proxy. (up to now)
+"""
+
+
+def handle_hello(proxy):
+    log.debug('RECEIVED HELLO')
+
+def handle_features_request(proxy):
+    log.debug('RECEIVED FEATURES REQUEST')
+    proxy.send((proxy.switch.features).pack())
+
+def handle_barrier_request(proxy,msg):
+    log.debug('RECEIVED FEATURES REQUEST')
+    newmsg = of.ofp_barrier_reply()
+    newmsg.xid = msg.xid
+    proxy.send(newmsg.pack())
+
+def handle_flow_mod(proxy,msg):
+    proxy.switch.send(msg)
+    log.debug('RECEIVED FLOW MOD')
+
+
+
+
+
 class Proxy (object) :
-    "A simple proxy"
+""" 
+    The proxy
+"""
     
     myserver = None
     controller = None
 
 
+    # Catch incoming message from central controller
     def _handle_ProxyMessageArrived (self, event):
         log.debug('In Handle')
         msg = event.msg
         
-        # Check if the message is a hello package and reply
-        if isinstance(msg,of.ofp_hello) :
-            log.debug('RECEIVED HELLO')
-           # self.send(msg.pack())
+        # Check what OFP message it is
+        # In could be a generic dispatcher but since for
+        # now we are implementing only a few of the messages
+        # it cannot be like that.
+        #TODO In the far future add all the message handlers
+        # above to make it more complet.
+
+        # hello
+        if isinstance(msg,of.ofp_hello) : handle_hello(self)
         
-        # Check if the message is a features request 
-        # and see if we got already the features from
-        # the actual switch in order to reply
+        # features_request 
         if isinstance(msg,of.ofp_features_request) :
-            log.debug('RECEIVED FEATURES REQUEST')
-            self.send((self.switch.features).pack())
+            handle_features_request(self)
 
-        # Check if the message is a Barrier in and reply
+        # barrier_request
         if isinstance(msg, of.ofp_barrier_request) :
-            log.debug('RECEIVED FEATURES REQUEST')
-            newmsg = of.ofp_barrier_reply()
-            newmsg.xid = msg.xid
-            self.send(newmsg.pack())
+            handle_barrier_request(self,msg)
 
-        #self.q.put(msg)
-        log.debug('Incoming message: '+msg.show())
-        #self.send(event.msg)
+        # flow_mod
+        if isinstance(msg, of.ofp_flow_mod) : handle_flow_mod(self,msg)
 
+        log.debug('Incoming message: ' + msg.show())
 
+    # An abstraction to use the underlying socket
     def send(self,  msg):
         self.conn.send(msg)
 
-
-    def read(self) :    
-        #log.debug('Inside read')
-        #log.debug(self.q.qsize())
-        #if self.q.empty(): return ''
-        while self.q.empty(): pass
-        msg = self.q.get()
-        log.debug('Read msg: '+ msg.show())
-        return msg
-
-
-    def start(self,switch):
-        self.conn = async2.Conn(self.rcontroller)
+    # Starting the underlying socket
+    def start(self,switch, rcontroller = self.rcontroller ):
+        self.rcontroller = rcontroller
+        # Create the underlying socket
+        self.conn = async2.Conn(rcontroller)
+        # Listen to event coming from the socket and
+        # are handled here
         self.conn.client.addListeners(self)
+        # This is the POX connection object 
         self.switch = switch
-       #send starting hello
+        # Send starting hello
         msg = of.ofp_hello()
         self.conn.start(msg.pack())
         log.debug('SENT HELLO')
 
-
-    def __init__(self,  rcontroller=('127.0.0.1',6634)) :
+    # Initializing the proxy
+    def __init__(self) :
         #log.debug('After register message:'+msg)
         #print type(msg)
-        self.rcontroller = rcontroller
-        self.q = Queue.Queue()
+        self.rcontroller = ('0.0.0.0',6634)
         self.conn = None
         self.switch = None
         #self.conn.start()
         log.info("Connection with remote Controller initiated")
-        # Example to test send
-        #msg = of.ofp_hello()
-        #print msg
-        #self.send(msg)
-
-
-# ProxyInWrapper
-#class Proxy (object):
-#
-#    def read(self):
-#        msg = self.pro.read()
-#        while msg == '' : 
-#            msg = self.pro.read()
-#        return msg
-#
-#    def send(self,msg ):
-#        self.pro.send(msg)
-#
-#    def start(self,msg) :
-#        self.pro.start(msg)
-#
-#    def __init__(self, rcontroller=('127.0.0.1',6634)):
-#        self.pro = ProxyIn(rcontroller)
-
 
 
 def launch ():
