@@ -33,7 +33,7 @@ from pox.lib.recoco.recoco import *
 
 
 class Client(Task, EventMixin):
-"""
+  """
     TCP Socket Client using select module
     
     This class is actually a socket wrapper providing the basic functionalities
@@ -46,7 +46,7 @@ class Client(Task, EventMixin):
     message is propagated with the help of the revent library from Pox. This is
     done to avoid polling.
     It throws the ProxyMessageArrived event when a message is read and parsed.
-"""
+  """
 
   # Declaring the event that is thrown
   _eventMixin_events = set([
@@ -143,13 +143,13 @@ class Client(Task, EventMixin):
 
 
 class Conn() :
-"""
+    """
     Connection class
     Provides a higher level view to the above which only
     can start and send messages.
     As said previously, since we want to avoid polling there is
     no read function but a raised event instead of that.
-"""
+    """
 
     def send (self, msg) :
       self.client.send(msg)

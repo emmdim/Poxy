@@ -68,6 +68,8 @@ import traceback
 import proxy
 
 myproxy = proxy.Proxy()
+raddressin = None
+rportin = None
 # End Manos
 
 def handle_HELLO (con, msg): #S
@@ -155,7 +157,9 @@ def handle_FEATURES_REPLY (con, msg):
     con.send(of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE))
 
   # Manos
-  myproxy.start((radress,rport),con)
+  address = (raddressin,rportin)
+  log.debug(address)
+  myproxy.start(con,address)
   # End Manos
   con.send(barrier)
 
@@ -838,6 +842,7 @@ class OpenFlow_01_Task (Task):
     Task.__init__(self)
     self.port = int(port)
     self.address = address
+    
 
     core.addListener(pox.core.GoingUpEvent, self._handle_GoingUpEvent)
 
@@ -936,6 +941,8 @@ _set_handlers()
 
 # Manos
 def launch (port = 6633, address = "0.0.0.0", rport = 6634, raddress = "0.0.0.0"):
+  globals()["raddressin"] = raddress
+  globals()["rportin"] = int(rport)
 # End Manos
   if core.hasComponent('of_01'):
     return None

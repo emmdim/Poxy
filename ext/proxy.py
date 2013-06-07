@@ -1,7 +1,7 @@
 import sys
 from pox.core import core
 from pox.lib.revent import *
-import async2
+import async
 import events
 import Queue
 
@@ -49,16 +49,12 @@ def handle_flow_mod(proxy,msg):
 
 
 
-
-
 class Proxy (object) :
-""" 
+    """ 
     The proxy
-"""
-    
+    """
     myserver = None
     controller = None
-
 
     # Catch incoming message from central controller
     def _handle_ProxyMessageArrived (self, event):
@@ -93,10 +89,10 @@ class Proxy (object) :
         self.conn.send(msg)
 
     # Starting the underlying socket
-    def start(self,switch, rcontroller = self.rcontroller ):
+    def start(self, switch, rcontroller= ('0.0.0.0',6634)):
         self.rcontroller = rcontroller
         # Create the underlying socket
-        self.conn = async2.Conn(rcontroller)
+        self.conn = async.Conn(rcontroller)
         # Listen to event coming from the socket and
         # are handled here
         self.conn.client.addListeners(self)
@@ -111,7 +107,7 @@ class Proxy (object) :
     def __init__(self) :
         #log.debug('After register message:'+msg)
         #print type(msg)
-        self.rcontroller = ('0.0.0.0',6634)
+        self.rcontroller = None
         self.conn = None
         self.switch = None
         #self.conn.start()
