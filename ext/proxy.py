@@ -84,6 +84,9 @@ class Proxy (object) :
 
         log.debug('Incoming message: ' + msg.show())
 
+    #def _handle_ConnectionDown(self,event):
+
+
     # An abstraction to use the underlying socket
     def send(self,  msg):
         self.conn.send(msg)
@@ -107,12 +110,15 @@ class Proxy (object) :
     def __init__(self) :
         #log.debug('After register message:'+msg)
         #print type(msg)
+        core.openflow.addListeners(self)
         self.rcontroller = None
         self.conn = None
         self.switch = None
         #self.conn.start()
         log.info("Connection with remote Controller initiated")
 
+    def stop(self):
+        self.conn.client.stop()
 
 def launch ():
     core.registerNew(Proxy)

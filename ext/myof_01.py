@@ -67,7 +67,7 @@ import traceback
 # Manos
 import proxy
 
-myproxy = proxy.Proxy()
+myproxy = [proxy.Proxy(),proxy.Proxy(),proxy.Proxy()]
 raddressin = None
 rportin = None
 # End Manos
@@ -159,7 +159,7 @@ def handle_FEATURES_REPLY (con, msg):
   # Manos
   address = (raddressin,rportin)
   log.debug(address)
-  myproxy.start(con,address)
+  myproxy[int(con.ID)-1].start(con,address)
   # End Manos
   con.send(barrier)
 
@@ -182,7 +182,7 @@ def handle_PORT_STATUS (con, msg): #A
   else:
     con.ports._update(msg.desc)
   # Manos
-  myproxy.switch = con
+  myproxy[int(con.ID)-1].switch = con
   # End Manos
   e = con.ofnexus.raiseEventNoErrors(PortStatus, con, msg)
   if e is None or e.halt != True:
@@ -661,6 +661,7 @@ class Connection (EventMixin):
       self.msg("already disconnected")
       already = True
     self.info(msg)
+    myproxy[int(self.ID)-1].stop()
     self.disconnected = True
     try:
       self.ofnexus._disconnect(self.dpid)

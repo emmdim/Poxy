@@ -31,6 +31,7 @@ log = core.getLogger()
 # Contains the Task class
 from pox.lib.recoco.recoco import *
 
+import sys
 
 class Client(Task, EventMixin):
   """
@@ -59,7 +60,7 @@ class Client(Task, EventMixin):
     # Creating socket and connecting to remote host
     self.address = address
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.sock.connect(self.address)
     # buf is used for messages that are arrived in multiple PDUs
     self.buf = ''
@@ -140,7 +141,12 @@ class Client(Task, EventMixin):
     log.debug('Proxy in Loop 2')
     Task.start(self)
 
-
+  def stop(self):
+    self.sock.close()
+    e = Exit()
+    global defaultScheduler
+    e.execute(self,defaultScheduler)
+    #sys.exit(0)
 
 class Conn() :
     """
@@ -161,6 +167,7 @@ class Conn() :
 
     def __init__ (self, rcontroller=('127.0.0.1',6634)):
         #super(Conn,self).__init__()
+        #self.pid = 
         self.rcontroller = rcontroller
         self.client = Client(self.rcontroller)
         log.debug("Client listening 0")
