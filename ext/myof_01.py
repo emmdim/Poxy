@@ -67,7 +67,7 @@ import traceback
 # Manos
 import proxy
 
-myproxy = [proxy.Proxy(),proxy.Proxy(),proxy.Proxy()]
+myproxy = [proxy.Proxy(),proxy.Proxy(),proxy.Proxy(),proxy.Proxy(),proxy.Proxy(), proxy.Proxy()]
 raddressin = None
 rportin = None
 # End Manos
