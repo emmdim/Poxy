@@ -42,5 +42,14 @@ to use the system. By deafualt it is 5. The option is
 max_users=5
 
 Example:
-../.pox.py log.level --DEBUG myof_01 --switch_mac="00:00:00:00:00:00" 
+../.pox.py log.level --DEBUG py myof_01 --switch_mac="00:00:00:00:00:00" 
 	[--rport=RPORT] [--raddress=RADRRESS] --max_users=10
+	
+The py instruction runs an interactive python CLI. Thus if the we want to add new
+users later it can be done using the following commands:
+POX>from myof_01 import *
+POX>addUser("00:00:00:00:00:00")
+
+Optionally the user can a specific destination other than the default (which is 
+as previsiously)
+POX>addUser("00:00:00:00:00:00","127.0.0.2",6633)
