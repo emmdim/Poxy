@@ -23,8 +23,24 @@ myof_01.py: A copy of the switch hanlder of pox of_01.py which starts also the
             proxy
 
 
-Start with debug on and connect to the central conntroler listening to the 
+In this branch (confine) the user declares the address of his switch
+(each user has one switch) along with the remote controller.
+Thus separate switches can be connected to separate controllers.
+
+The user should be added before the switch is brought up.
+
+Start with debug on and connect to the central controler listening to the 
 IP: RADRRESS (string, default = "127.0.0.1")
 PORT: RPORT (int, default = 6634 )
-and to the :
-../.pox.py log.level --DEBUG myof_01 [--rport=RPORT] [--raddress=RADRRESS]
+
+It is also necessary to declare the MAC address of the first user.
+For example
+MAC: switch_mac="00:00:00:00:00:00"
+
+Another possible option defines the maximum number of users that are going
+to use the system. By deafualt it is 5. The option is
+max_users=5
+
+Example:
+../.pox.py log.level --DEBUG myof_01 --switch_mac="00:00:00:00:00:00" 
+	[--rport=RPORT] [--raddress=RADRRESS] --max_users=10
