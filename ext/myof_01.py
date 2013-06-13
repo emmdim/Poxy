@@ -661,7 +661,9 @@ class Connection (EventMixin):
       self.msg("already disconnected")
       already = True
     self.info(msg)
-    myproxy[int(self.ID)-1].stop()
+    # Manos
+    #myproxy[int(self.ID)-1].stop()
+    # End Manos
     self.disconnected = True
     try:
       self.ofnexus._disconnect(self.dpid)
@@ -926,7 +928,6 @@ class OpenFlow_01_Task (Task):
         except:
           pass
     
-    mysock.stop()
     log.debug("No longer listening for connections")
 
     #pox.core.quit()
