@@ -10,6 +10,8 @@ from pox.core import core
 from pox.lib.revent import *
 from pox.lib.revent.revent import EventMixin
 
+from socket import error as socket_error
+
 """
 This is the main connection component. It implements a TCP socket which 
 1) raises a ProxyMessageArrived event when a new message appears from
@@ -54,14 +56,17 @@ class Client(Task, EventMixin):
         ProxyMessageArrived,
   ])
     
-  def __init__ (self, address = ('127.0.0.1',6634)):
+  def __init__ (self, address = ('127.0.0.1',6634), sock = None):
+    # create a task-specific scheduler
+    self.sched = Scheduler()
     # Intializing Task
     Task.__init__(self)
     # Creating socket and connecting to remote host
     self.address = address
-    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.sock = sock
+    #self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    self.sock.connect(self.address)
+    #self.sock.connect(self.address)
     # buf is used for messages that are arrived in multiple PDUs
     self.buf = ''
     # This is not needed since I start this client when I already
@@ -77,29 +82,33 @@ class Client(Task, EventMixin):
     sockets = [self.sock]
     # The core of asynchronous reading
     while True:
-      try:
-        log.debug('Core is running')
-        con = None
-        rlist, wlist, elist = yield Select(sockets, [], [],5)
-        if len(rlist) == 0 and len(wlist) == 0 and len(elist) == 0:
-            if not core.running: break
-        # If there are data for reading in the socket call the
-        # read() function
-        for con in rlist:
-            self.read()
+        #while self.sock:
+            try:
+                #log.debug('Core is running')
+                con = None
+                rlist, wlist, elist = yield Select(sockets, [], [],5)
+                if len(rlist) == 0 and len(wlist) == 0 and len(elist) == 0:
+                    if not core.running: break
+            # If there are data for reading in the socket call the
+            # read() function
+                for con in rlist:
+                    if con:
+                        self.read()
             
-      except exceptions.KeyboardInterrupt:
-        break
+            except exceptions.KeyboardInterrupt:
+                break
+            except socket_error:
+                break
     log.debug("No longer listening for connections")
 
 
   def read(self):
     # Read the socket
     d = self.sock.recv(2048)
-    log.debug('Inside READ')
+    #log.debug('Inside READ')
     # Leave if read nothing
     if len(d) == 0:
-        log.debug('Inside FALSE')
+        #log.debug('Inside FALSE')
         return False
     # Add message to existing buffer om case it arrived in 
     # pieces
@@ -117,8 +126,8 @@ class Client(Task, EventMixin):
         assert new_offset - offset == msg_length
         offset = new_offset
 
-        log.debug('In handle_read')
-        log.info(msg)
+        #log.debug('In handle_read')
+        #log.info(msg)
         # msg here has the received message and it is propagated
         # to whoever listens the following event
         self.raiseEvent(ProxyMessageArrived,msg)
@@ -129,8 +138,9 @@ class Client(Task, EventMixin):
 
   # Send a packet to the destination of the socket
   def send(self,msg):
-    log.debug('handle_write'+msg)
-    sent = self.sock.send(msg)
+    #log.debug('handle_write'+msg)
+    if self.sock:
+        sent = self.sock.send(msg)
   
   # Start the Task
   # The Task.start(self) command does some internal initializations
@@ -139,13 +149,15 @@ class Client(Task, EventMixin):
   #def start_event_loop(self, event):
   def start_event_loop(self):
     log.debug('Proxy in Loop 2')
-    Task.start(self)
+    Task.start(self,scheduler = self.sched)
 
   def stop(self):
-    self.sock.close()
+    # Kill task-specific scheduler to kill task
     e = Exit()
     global defaultScheduler
-    e.execute(self,defaultScheduler)
+    e.execute(self,self.sched)
+    self._scheduler = None
+    self.sock = None
     #sys.exit(0)
 
 class Conn() :
@@ -168,9 +180,18 @@ class Conn() :
     def __init__ (self, rcontroller=('127.0.0.1',6634)):
         #super(Conn,self).__init__()
         #self.pid = 
+        
         self.rcontroller = rcontroller
-        self.client = Client(self.rcontroller)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.connect(self.rcontroller)
+        self.client = Client(self.rcontroller,self.sock)
         log.debug("Client listening 0")
+
+    def stop(self):
+        self.client.stop()
+        self.client = None
+        self.sock.close()
 
 
 

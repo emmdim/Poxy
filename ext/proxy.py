@@ -82,7 +82,7 @@ class Proxy (object) :
         # flow_mod
         if isinstance(msg, of.ofp_flow_mod) : handle_flow_mod(self,msg)
 
-        log.debug('Incoming message: ' + msg.show())
+        #log.debug('Incoming message: ' + msg.show())
 
     #def _handle_ConnectionDown(self,event):
 
@@ -118,7 +118,9 @@ class Proxy (object) :
         log.info("Connection with remote Controller initiated")
 
     def stop(self):
-        self.conn.client.stop()
+        self.conn.stop()
+        self.conn = None
+        self.switch = None
 
 def launch ():
     core.registerNew(Proxy)

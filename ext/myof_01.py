@@ -65,11 +65,18 @@ from errno import EAGAIN, ECONNRESET
 import traceback
 
 # Manos
+
+from pox.lib.addresses import EthAddr
 import proxy
 
-myproxy = [proxy.Proxy(),proxy.Proxy(),proxy.Proxy(),proxy.Proxy(),proxy.Proxy(), proxy.Proxy()]
-raddressin = None
-rportin = None
+
+# Users and proxy lists are ony-by-one
+myproxy = []
+users = []
+
+def addUser(switch_mac, raddress = '0.0.0.0', rport = 6634):
+    globals()["users"].append((EthAddr(switch_mac),(raddress,rport)))
+
 # End Manos
 
 def handle_HELLO (con, msg): #S
@@ -93,6 +100,7 @@ def handle_FLOW_REMOVED (con, msg): #A
     con.raiseEventNoErrors(FlowRemoved, con, msg)
 
 def handle_FEATURES_REPLY (con, msg):
+  log.debug('In features')
   connecting = con.connect_time == None
   
   con.features = msg
@@ -157,9 +165,17 @@ def handle_FEATURES_REPLY (con, msg):
     con.send(of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE))
 
   # Manos
-  address = (raddressin,rportin)
-  log.debug(address)
-  myproxy[int(con.ID)-1].start(con,address)
+  for p in msg.ports:
+      if p.port_no == of.OFPP_LOCAL:
+          for u in users:
+              if u[0] == p.hw_addr:
+                  address = u[1]
+                  myproxyid = users.index(u)
+  #log.debug(address)
+  myproxy[myproxyid].start(con,address)
+  #for p in myproxy:
+  #    log.debug('Switches:')
+  #    log.debug(p.switch)
   # End Manos
   con.send(barrier)
 
@@ -182,7 +198,9 @@ def handle_PORT_STATUS (con, msg): #A
   else:
     con.ports._update(msg.desc)
   # Manos
-  myproxy[int(con.ID)-1].switch = con
+  for p in myproxy:
+      if p.switch.ID == con.ID:
+          p.switch = con
   # End Manos
   e = con.ofnexus.raiseEventNoErrors(PortStatus, con, msg)
   if e is None or e.halt != True:
@@ -661,7 +679,16 @@ class Connection (EventMixin):
       self.msg("already disconnected")
       already = True
     self.info(msg)
-    myproxy[int(self.ID)-1].stop()
+    # Manos
+    for p in myproxy:
+        if p.switch:
+            log.debug(p.switch)
+            if p.switch.ID == self.ID:
+                p.stop()
+                #p.conn.client.sock.close()
+                p = proxy.Proxy()
+    # End Manos
+    log.debug('After stop')
     self.disconnected = True
     try:
       self.ofnexus._disconnect(self.dpid)
@@ -941,9 +968,13 @@ _set_handlers()
 
 
 # Manos
-def launch (port = 6633, address = "0.0.0.0", rport = 6634, raddress = "0.0.0.0"):
-  globals()["raddressin"] = raddress
-  globals()["rportin"] = int(rport)
+def launch (switch_mac, max_users = 5, port = 6633, address = "0.0.0.0", rport = 6634, raddress ="0.0.0.0"):
+  switch_mac = EthAddr(switch_mac)
+  globals()["users"].append((switch_mac,(raddress, rport)))
+  for  i in range(0,max_users):
+    globals()["myproxy"].append(proxy.Proxy())  
+  #globals()["raddressin"] = raddress
+  #globals()["rportin"] = int(rport)
 # End Manos
   if core.hasComponent('of_01'):
     return None
