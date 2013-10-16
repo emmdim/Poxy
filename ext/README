@@ -2,8 +2,8 @@ This directory is now under version control and still has my own projects.
 
 
 This application acts kind of like a proxy. It assumes that there is a local
-dump POX controller and and a remote actual generic Openflow controller that
-does all the smart stuff. The apps job is to  register the switch in both 
+dumb POX controller and a remote actual generic Openflow controller that
+does all the smart stuff. The app's job is to register the switch in both 
 controllers but use the local one actually only to simulate that is connected
 to the controller. The remote one will contain the actual controller logic
 (for example another POX app).
