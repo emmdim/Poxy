@@ -8,7 +8,7 @@ import Queue
 
 """
 This module lies in the middle of the asynchornous connection object of
-async.py and the basic POX funciotnality. It gives the abstraction of a 
+async.py and the basic POX functionality. It gives the abstraction of a 
 Proxy between the switch and the remote controller.
 
 On the one hand it receives messages from the remote controller and 
@@ -26,7 +26,8 @@ log = core.getLogger()
 """ 
     Mesage Handlers
     
-    The main logic of the proxy. (up to now)
+    Handlers of the messages coming from the local controller.
+    (raised from the pox environment core.openflow)
 """
 
 
@@ -53,11 +54,11 @@ class Proxy (object) :
     """ 
     The proxy
     """
-    myserver = None
-    controller = None
+    myserver = None # Is it needed?
+    controller = None # Is it needed?
 
-    # Catch incoming message from central controller
-    def _handle_ProxyMessageArrived (self, event):
+    # Catch incoming message from remote controller
+    def _handle_RemoteMessageArrived (self, event):
         log.debug('In Handle')
         msg = event.msg
         
@@ -91,7 +92,8 @@ class Proxy (object) :
     def send(self,  msg):
         self.conn.send(msg)
 
-    # Starting the underlying socket
+    # Starting the connection with the remote controller 
+    # and the underlying socket
     def start(self, switch, rcontroller= ('0.0.0.0',6634)):
         self.rcontroller = rcontroller
         # Create the underlying socket
@@ -100,7 +102,7 @@ class Proxy (object) :
         # are handled here
         self.conn.client.addListeners(self)
         # This is the POX connection object 
-        self.switch = switch
+        self.switch = switch #where is this used???
         # Send starting hello
         msg = of.ofp_hello()
         self.conn.start(msg.pack())
@@ -111,9 +113,9 @@ class Proxy (object) :
         #log.debug('After register message:'+msg)
         #print type(msg)
         core.openflow.addListeners(self)
-        self.rcontroller = None
-        self.conn = None
-        self.switch = None
+        self.rcontroller = None # Initialized  in start?
+        self.conn = None # Initialized  in start?
+        self.switch = None # Initialized  in start?
         #self.conn.start()
         log.info("Connection with remote Controller initiated")
 

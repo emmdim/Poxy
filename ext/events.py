@@ -9,7 +9,7 @@ This is a class to declare all the custom events.
 
 log = core.getLogger()
 
-class ProxyMessageArrived (Event):
+class RemoteMessageArrived (Event):
     def __init__ (self,msg=None) :
         Event.__init__(self)
         #log.debug("Inside Event")
