@@ -79,6 +79,15 @@ def addUser(switch_mac, raddress = '0.0.0.0', rport = 6634):
 
 # End Manos
 
+def showUsers():
+    for u in users:
+        log.info('//////////')
+        log.info('User ID : %s',users.index(u))
+        log.info('Mac: %s',u[0])
+        log.info('Remote Controller: %s', u[1])
+        log.info('/////////\n')
+    
+
 def handle_HELLO (con, msg): #S
   # Send a features request
   msg = of.ofp_features_request()
