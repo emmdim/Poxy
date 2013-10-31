@@ -102,7 +102,8 @@ class Proxy (object) :
         # are handled here
         self.conn.client.addListeners(self)
         # This is the POX connection object 
-        self.switch = switch #where is this used???
+        # Its information is used by myof_01 module
+        self.switch = switch 
         # Send starting hello
         msg = of.ofp_hello()
         self.conn.start(msg.pack())

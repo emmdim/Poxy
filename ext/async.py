@@ -48,12 +48,12 @@ class Client(Task, EventMixin):
     Sending can happen through this object but the info that there an incoming
     message is propagated with the help of the revent library from Pox. This is
     done to avoid polling.
-    It throws the ProxyMessageArrived event when a message is read and parsed.
+    It throws the RemoteMessageArrived event when a message is read and parsed.
   """
 
   # Declaring the event that is thrown
   _eventMixin_events = set([
-        ProxyMessageArrived,
+        RemoteMessageArrived,
   ])
     
   def __init__ (self, address = ('127.0.0.1',6634), sock = None):
@@ -130,7 +130,7 @@ class Client(Task, EventMixin):
         #log.info(msg)
         # msg here has the received message and it is propagated
         # to whoever listens the following event
-        self.raiseEvent(ProxyMessageArrived,msg)
+        self.raiseEvent(RemoteMessageArrived,msg)
 
     # Check if there is more the previous message in the PDU
     if offset != 0:
